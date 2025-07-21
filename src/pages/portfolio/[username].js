@@ -3,43 +3,56 @@ import {
   GithubRepoTable,
   ProfileDetails,
 } from "@/components/Portfoliocomponents";
-import React from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
-export async function getServerSideProps({ params }) {
-  const username = params.username;
+export default function Portfolio() {
+  const router = useRouter();
+  const { username } = router.query;
 
-  const githubUrl = `https://api.github.com/users/${username}`;
-  const repoUrl = `https://api.github.com/users/${username}/repos`;
-  const xanoUrl = `https://x8ki-letl-twmt.n7.xano.io/api:LbYA1Egg/dev_connect?github_user=${username}`;
+  const [user, setUser] = useState(null);
+  const [repos, setRepos] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [error, setError] = useState(null);
 
-  try {
-    const [userRes, repoRes, xanoRes] = await Promise.all([
-      fetch(githubUrl),
-      fetch(repoUrl),
-      fetch(xanoUrl),
-    ]);
+  useEffect(() => {
+    if (!username) return;
 
-    const user = await userRes.json();
-    const repos = await repoRes.json();
-    const xanoData = await xanoRes.json();
+    const githubUrl = `https://api.github.com/users/${username}`;
+    const repoUrl = `https://api.github.com/users/${username}/repos`;
+    const xanoUrl = `https://x8ki-letl-twmt.n7.xano.io/api:LbYA1Egg/dev_connect?github_user=${username}`;
 
-    if (user.message === "Not Found") {
-      return { notFound: true };
-    }
+    const fetchData = async () => {
+      try {
+        const [userRes, repoRes, xanoRes] = await Promise.all([
+          fetch(githubUrl),
+          fetch(repoUrl),
+          fetch(xanoUrl),
+        ]);
 
-    return {
-      props: {
-        user,
-        repos,
-        profile: xanoData.length ? xanoData[0] : null, // Safe fallback
-      },
+        const userData = await userRes.json();
+        const repoData = await repoRes.json();
+        const xanoData = await xanoRes.json();
+
+        if (userData.message === "Not Found") {
+          setError("GitHub user not found");
+          return;
+        }
+
+        setUser(userData);
+        setRepos(repoData);
+        setProfile(xanoData.length ? xanoData[0] : null);
+      } catch (err) {
+        setError("Error fetching data");
+      }
     };
-  } catch (error) {
-    return { notFound: true };
-  }
-}
 
-export default function Portfolio({ user, repos, profile }) {
+    fetchData();
+  }, [username]);
+
+  if (error) return <p>{error}</p>;
+  if (!user) return <p>Loading...</p>;
+
   const githubUsername = user.login;
 
   return (
@@ -51,7 +64,6 @@ export default function Portfolio({ user, repos, profile }) {
         alignItems: "center",
       }}
     >
-      {/* <UserHeader image={user.avatar_url} name={user.name} login={user.login} /> */}
       {user?.avatar_url && (
         <img
           src={user.avatar_url}
