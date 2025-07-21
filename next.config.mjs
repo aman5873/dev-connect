@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: "export", // ✅ Required for static HTML export
+  output: "standalone", // ✅ recommended for Vercel
 };
 
 export default nextConfig;
