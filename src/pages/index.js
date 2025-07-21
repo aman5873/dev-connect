@@ -34,7 +34,7 @@ export default function HomePage() {
           className="text-blue-600 underline"
           style={{ color: "#206fbd" }}
         >
-          devconnect.app/portfolio/{username}
+          dev-connect-lac-alpha.vercel.ap/portfolio/{username}
         </Link>
       </p>
 
